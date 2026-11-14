@@ -1,0 +1,9 @@
+Analysis,Metric,Value
+Annual exact Kendall,tau,1.0
+Annual exact Kendall,p_value,5.5114638447971785e-06
+Annual Theil-Sen,slope_km2_per_year,8.623315460242683
+Annual Theil-Sen,95pct_CI_low,7.579708964609703
+Annual Theil-Sen,95pct_CI_high,9.667093763098983
+Monthly year-block permutation,p_value,4.999750012499375e-05
+Monthly within-month slopes,median_slope_km2_per_year,9.046968380424769
+STL residual Ljung-Box,p_value_at_12_lags,0.17860925046782433

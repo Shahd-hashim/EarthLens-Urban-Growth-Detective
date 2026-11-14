@@ -1,0 +1,17 @@
+# EarthLens - Urban Growth Detective
+# Core (app.py, notebook, steps 5-7)
+streamlit>=1.40
+pandas>=2.0
+numpy>=1.26
+scipy>=1.11
+scikit-learn>=1.3
+statsmodels>=0.14
+matplotlib>=3.8
+plotly>=5.24
+
+# Notebook (notebooks/steps1-4_trend_and_stl.ipynb)
+jupyter
+ipykernel
+
+# Step 8 only (NASA Black Marble via Google Earth Engine) - optional
+# earthengine-api

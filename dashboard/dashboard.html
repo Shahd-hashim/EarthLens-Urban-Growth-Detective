@@ -1,0 +1,375 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Urban Growth Dashboard</title>
+<style>
+:root{--bg:#202b3f;--panel:#2a3851;--line:#3b4b6b;--tx:#e8edf6;--mut:#9db0cf;--a:#f2b84b;--b:#5eead4;--c:#ff8a7a;--d:#8ab4ff;--e:#c7a8ff}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.5 "Segoe UI",system-ui,-apple-system,Roboto,sans-serif}
+header{padding:28px 32px 8px;max-width:1280px;margin:auto}
+h1{margin:0;font-size:26px;font-weight:650;letter-spacing:-.01em}
+header p{margin:4px 0 0;color:var(--mut)}
+nav{display:flex;gap:8px;flex-wrap:wrap;max-width:1280px;margin:16px auto 0;padding:0 32px}
+nav button{background:transparent;color:var(--mut);border:1px solid var(--line);border-radius:8px;padding:9px 16px;font:inherit;cursor:pointer}
+nav button:hover{color:var(--tx)}
+nav button.on{background:var(--tx);color:var(--bg);border-color:var(--tx);font-weight:600}
+main{max-width:1280px;margin:auto;padding:20px 32px 48px}
+section{display:none}section.on{display:block}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-bottom:16px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px}
+.kpi small{color:var(--mut);display:block}
+.kpi em{font-style:normal;font-size:.5em;font-weight:500;color:var(--mut)}
+.kpi b{display:block;font-size:30px;white-space:nowrap;font-weight:650;margin:2px 0;letter-spacing:-.02em}
+.kpi span{font-size:13px;color:var(--mut)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,520px),1fr));gap:16px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px;min-width:0}
+.card h3{margin:0 0 2px;font-size:16px;font-weight:600}
+.card p{margin:0 0 8px;font-size:13px;color:var(--mut)}
+.wide{grid-column:1/-1}
+svg,canvas{width:100%;height:auto;display:block}
+.g{stroke:var(--line);stroke-width:1}
+.t{fill:var(--mut);font-size:11px}
+.lg{display:flex;gap:16px;flex-wrap:wrap;font-size:12.5px;color:var(--mut);margin-top:6px}
+.lg i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+#msg{max-width:1280px;margin:20px auto;padding:0 32px;color:var(--c)}
+#msg div{background:var(--panel);border:1px solid var(--c);border-radius:12px;padding:16px 18px}
+#msg code{background:var(--bg);padding:2px 6px;border-radius:5px;color:var(--tx)}
+#tip{position:fixed;pointer-events:none;opacity:0;z-index:9;background:#141c2b;border:1px solid var(--line);border-radius:10px;padding:9px 13px;font-size:13px;line-height:1.5;box-shadow:0 8px 24px #0007;transition:opacity .1s;max-width:300px}
+#tip b{font-weight:650}#tip>b:first-child{display:block;margin-bottom:2px}
+#tip i,.lg i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px}
+#tip .sub{color:var(--mut);font-size:12px;margin-top:3px}
+.ax{fill:#c3d0e6;font-size:12px}
+.bar{transition:filter .12s}.bar.hv{filter:brightness(1.35)}
+.tg{cursor:pointer;user-select:none}.tg.off{opacity:.4;text-decoration:line-through}
+.kpi{transition:border-color .15s,transform .15s}.kpi:hover{border-color:var(--a);transform:translateY(-2px)}
+.card:hover{border-color:#4d6089}
+.cb{height:8px;border-radius:4px;margin-top:8px}
+.cbl{display:flex;justify-content:space-between;font-size:12px;color:var(--mut);margin-top:3px}
+svg,canvas{cursor:crosshair}
+.banner{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:6px 22px;background:var(--panel);border:1px solid var(--a);border-radius:12px;padding:16px 20px;margin-bottom:16px}
+.bq small{color:var(--mut);display:block}.bq b{display:block;font-size:22px;font-weight:650;letter-spacing:-.01em}.bq b em{font-style:normal;font-size:.55em;color:var(--mut);font-weight:500}.bq span{font-size:13px;color:var(--mut)}
+.bs{grid-column:1/-1;margin:6px 0 0;padding-top:10px;border-top:1px solid var(--line);font-size:15px}
+.ctl{display:flex;gap:14px;flex-wrap:wrap;align-items:end;margin:10px 0 12px}
+.ctl label{display:flex;flex-direction:column;font-size:12.5px;color:var(--mut);gap:4px}
+select{background:var(--bg);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font:inherit;font-size:14px;min-width:120px}
+.hint{font-size:13px;color:var(--mut)}
+.chip{background:transparent;color:var(--tx);border:1px solid var(--line);border-radius:999px;padding:6px 13px;font:inherit;font-size:13px;cursor:pointer}.chip:hover{border-color:var(--b);color:var(--b)}
+.tdgrid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(260px,1fr);gap:22px}
+@media(max-width:820px){.tdgrid{grid-template-columns:1fr}}
+.verdict{font-size:22px;font-weight:650;margin-bottom:6px}
+#tdr p{margin:0 0 10px;font-size:14.5px;color:var(--tx)}#tdr p.note{font-size:12.5px;color:var(--mut)}
+.rows div{display:flex;justify-content:space-between;gap:12px;border-top:1px solid var(--line);padding:7px 0;font-size:14px}.rows div span{color:var(--mut)}
+</style>
+</head>
+<body>
+<header>
+  <h1>Urban Growth Dashboard</h1>
+  <p>Built-up area, land conversion and trend evidence from satellite observations. Hover over any chart for details; click legend items to show or hide them.</p>
+</header>
+<nav id="tabs">
+  <button class="on" data-t="d1">1 · Urban Growth Overview</button>
+  <button data-t="d2">2 · Spatial &amp; Land Conversion</button>
+  <button data-t="d3">3 · Statistical Evidence &amp; Quality</button>
+</nav>
+<div id="msg"></div>
+<main>
+  <section id="d1" class="on">
+    <div class="banner" id="bn"></div>
+    <div class="kpis" id="k1"></div>
+    <div class="grid">
+      <div class="card"><h3>Built-up area each year</h3><p>Two ways of estimating it: a strict estimate and a most-likely estimate (km²)</p><div id="c1"></div></div>
+      <div class="card"><h3>How much was added each year</h3><p>New built-up area compared with the year before (km²)</p><div id="c2"></div></div>
+      <div class="card wide"><h3>Built-up area by month, with smoothed trend</h3><p>Monthly values jump around with the seasons; the 12-month average shows the real direction (km²)</p><div id="c3"></div></div>
+    </div>
+  </section>
+  <section id="d2">
+    <div class="kpis" id="k2"></div>
+    <div class="grid">
+      <div class="card"><h3>Land turned into built-up, by period</h3><p>Area that changed to built-up and stayed that way (km²)</p><div id="c4"></div></div>
+      <div class="card"><h3>What the land was before</h3><p>Type of land that was converted to built-up, all periods combined (km²)</p><div id="c5"></div></div>
+      <div class="card"><h3>Sample points by land type</h3><p>Number of checked sample points in each land type</p><div id="c6"></div></div>
+      <div class="card"><h3>Where the sample points are</h3><p>Each dot is one sample point; click the legend to hide a land type</p><canvas id="c7" width="640" height="300"></canvas><div class="lg" id="l7"></div></div>
+    </div>
+  </section>
+  <section id="d3">
+    <div class="card" id="td" style="margin-bottom:16px">
+      <h3>Trend Detective</h3><p>Choose what to investigate and the period. The tool recomputes the trend and tells you, in plain English, whether it is real.</p>
+      <div class="ctl">
+        <label>Variable<select id="tv"></select></label>
+        <label>Time step<select id="tr"><option value="a">Yearly</option><option value="m">Monthly (seasons removed)</option></select></label>
+        <label>From<select id="ts"></select></label>
+        <label>To<select id="te"></select></label>
+      </div>
+      <div class="ctl"><span class="hint">Try an example:</span><button class="chip" data-p="full">Whole record</button><button class="chip" data-p="short">Only 2017–2020</button><button class="chip" data-p="m">Monthly, seasons removed</button></div>
+      <div class="tdgrid"><div id="tdc"></div><div id="tdr"></div></div>
+    </div>
+    <div class="kpis" id="k3"></div>
+    <div class="grid">
+      <div class="card"><h3>Satellite coverage each month</h3><p>Share of the region seen by satellites; red dots are months flagged for quality review</p><div id="c8"></div></div>
+      <div class="card"><h3>Seasonal pattern</h3><p>Average built-up area for each calendar month across all years (km²)</p><div id="c9"></div></div>
+      <div class="card wide"><h3>Satellite images used each year</h3><p>More images means more reliable yearly estimates</p><div id="c10"></div></div>
+    </div>
+  </section>
+</main>
+
+<script>
+const FILES={ann:'Annual_Growth.csv',cls:'Classification_Samples.csv',conv:'Land_Conversion.csv',mon:'Monthly_Growth.csv',sus:'Susceptibility_Samples.csv'};
+const C={a:'#f2b84b',b:'#5eead4',c:'#ff8a7a',d:'#8ab4ff',e:'#c7a8ff'};
+const $=s=>document.querySelector(s);
+const fmt=(v,d=1)=>Math.abs(v)>=1000?v.toLocaleString(undefined,{maximumFractionDigits:0}):(+v).toFixed(Math.abs(v)<1&&v!==0?3:d);
+const sum=a=>a.reduce((x,y)=>x+y,0), mean=a=>sum(a)/a.length;
+const med=a=>{const s=[...a].sort((x,y)=>x-y),m=s.length>>1;return s.length%2?s[m]:(s[m-1]+s[m])/2};
+
+/* ---------- CSV ---------- */
+function parse(t){
+  const L=t.replace(/^\uFEFF/,'').trim().split(/\r?\n/),h=L[0].split(',');
+  return L.slice(1).map(l=>{const c=l.split(','),o={};h.forEach((k,i)=>{const v=c[i];o[k]=v===''||v==null?null:(isNaN(v)?v:+v)});return o});
+}
+
+/* ---------- Statistics ---------- */
+const erf=x=>{const t=1/(1+.3275911*Math.abs(x)),y=1-((((1.061405429*t-1.453152027)*t+1.421413741)*t-.284496736)*t+.254829592)*t*Math.exp(-x*x);return x>=0?y:-y};
+const Phi=z=>.5*(1+erf(z/Math.SQRT2));
+function mkParts(y){
+  const n=y.length;let S=0;for(let i=0;i<n-1;i++)for(let j=i+1;j<n;j++)S+=Math.sign(y[j]-y[i]);
+  const cnt={};y.forEach(v=>cnt[v]=(cnt[v]||0)+1);
+  const V=(n*(n-1)*(2*n+5)-Object.values(cnt).reduce((s,t)=>s+t*(t-1)*(2*t+5),0))/18;
+  return {S,V};
+}
+const mkP=(S,V)=>{const z=S>0?(S-1)/Math.sqrt(V):S<0?(S+1)/Math.sqrt(V):0;return 2*(1-Phi(Math.abs(z)))};
+const slopes=(y,x)=>{const s=[];for(let i=0;i<y.length-1;i++)for(let j=i+1;j<y.length;j++)s.push((y[j]-y[i])/(x[j]-x[i]));return s};
+const pTxt=p=>p<0.001?'< 0.001':p.toFixed(3);
+const sig=p=>p<0.05?'Significant (α = 0.05)':'Not significant (α = 0.05)';
+
+/* ---------- Tooltip ---------- */
+const tip=document.createElement('div');tip.id='tip';document.body.appendChild(tip);
+const showTip=(h,e)=>{tip.innerHTML=h;tip.style.opacity=1;const w=tip.offsetWidth,hh=tip.offsetHeight;let x=e.clientX+16,y=e.clientY+16;if(x+w>innerWidth-8)x=e.clientX-w-16;if(y+hh>innerHeight-8)y=e.clientY-hh-16;tip.style.left=x+'px';tip.style.top=y+'px'};
+const hideTip=()=>tip.style.opacity=0;
+
+/* ---------- Names ---------- */
+const NAME={flooded_vegetation:'Flooded vegetation',shrub_and_scrub:'Shrub & scrub',snow_and_ice:'Snow & ice'};
+const SHORT={flooded_vegetation:'Flooded veg.',shrub_and_scrub:'Shrub/scrub',snow_and_ice:'Snow/ice'};
+const pretty=s=>NAME[s]||s[0].toUpperCase()+s.slice(1);
+
+/* ---------- Colour scale ---------- */
+const hex=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));
+const scale=(st,t)=>{const k=Math.min(st.length-2,Math.floor(t*(st.length-1))),u=t*(st.length-1)-k,a=hex(st[k]),b=hex(st[k+1]);return '#'+a.map((v,i)=>Math.round(v+(b[i]-v)*u).toString(16).padStart(2,'0')).join('')};
+
+/* ---------- Chart helpers ---------- */
+function frame(W,H,L,R,T,B,lo,hi,labels,x,o={}){
+  const tf=o.tf||fmt;let s='';
+  for(let k=0;k<=4;k++){const v=lo+(hi-lo)*k/4,yy=T+(H-T-B)*(1-k/4);
+    s+=`<line class="g" x1="${L}" x2="${W-R}" y1="${yy}" y2="${yy}"/><text class="t" x="${L-7}" y="${yy+3}" text-anchor="end">${tf(v)}</text>`}
+  const st=Math.ceil(labels.length/8),tk=o.tick||(i=>i%st===0?labels[i]:'');
+  labels.forEach((l,i)=>{const t=tk(i);if(t!=='')s+=`<text class="t" x="${x(i)}" y="${H-B+16}" text-anchor="middle">${t}</text>`});
+  if(o.x)s+=`<text class="ax" x="${(L+W-R)/2}" y="${H-6}" text-anchor="middle">${o.x}</text>`;
+  if(o.y)s+=`<text class="ax" transform="rotate(-90)" x="${-(T+H-B)/2}" y="14" text-anchor="middle">${o.y}</text>`;
+  return s;
+}
+function line(id,labels,series,o={}){
+  const el=$(id),hid=new Set(),W=640,H=270,L=58,R=14,T=12,B=46,n=labels.length,f=o.f||(v=>fmt(v,2));
+  function draw(){
+    const vis=series.map((s,i)=>[s,i]).filter(([s,i])=>!hid.has(i));
+    const all=vis.flatMap(([s])=>s.v).filter(v=>v!=null&&isFinite(v));
+    let lo=0,hi=1;if(all.length){lo=Math.min(...all);hi=Math.max(...all);const p=(hi-lo)*.1||1;lo=o.min??lo-p;hi=o.max??hi+p}
+    const x=i=>L+(W-L-R)*(n<2?.5:i/(n-1)),y=v=>T+(H-T-B)*(1-(v-lo)/(hi-lo));
+    let s=`<svg viewBox="0 0 ${W} ${H}">`+frame(W,H,L,R,T,B,lo,hi,labels,x,o);
+    vis.forEach(([se])=>{
+      let d='',pen=false;
+      se.v.forEach((v,i)=>{if(v==null||!isFinite(v)){pen=false;return}d+=(pen?'L':'M')+x(i).toFixed(1)+','+y(v).toFixed(1);pen=true});
+      s+=`<path d="${d}" fill="none" stroke="${se.c}" stroke-width="2.2" stroke-linejoin="round"${se.dash?' stroke-dasharray="6 4"':''}/>`;
+      se.v.forEach((v,i)=>{if(v==null||!isFinite(v))return;const hot=se.hot&&se.hot(i);
+        if(hot||se.dots)s+=`<circle cx="${x(i).toFixed(1)}" cy="${y(v).toFixed(1)}" r="${hot?4.5:3.5}" fill="${hot?C.c:se.c}"/>`});
+    });
+    s+=`<line class="ch" y1="${T}" y2="${H-B}" stroke="#9db0cf" stroke-dasharray="3 3" opacity="0"/>`;
+    vis.forEach(([se])=>s+=`<circle class="fd" r="5.5" fill="${se.c}" stroke="#202b3f" stroke-width="2" opacity="0"/>`);
+    el.innerHTML=s+'</svg><div class="lg">'+series.map((se,i)=>`<span class="tg${hid.has(i)?' off':''}" data-i="${i}"><i style="background:${se.c}"></i>${se.name}</span>`).join('')+(o.extra||'')+'</div>';
+    const svg=el.querySelector('svg'),ch=svg.querySelector('.ch'),fds=[...svg.querySelectorAll('.fd')];
+    svg.onmousemove=e=>{
+      const b=svg.getBoundingClientRect(),px=(e.clientX-b.left)/b.width*W;
+      const i=Math.max(0,Math.min(n-1,Math.round((px-L)/(W-L-R)*(n-1))));
+      ch.setAttribute('x1',x(i));ch.setAttribute('x2',x(i));ch.setAttribute('opacity',1);
+      let h=`<b>${o.hl?o.hl(i):labels[i]}</b>`;
+      vis.forEach(([se],k)=>{const v=se.v[i],ok=v!=null&&isFinite(v);fds[k].setAttribute('opacity',ok?1:0);
+        if(ok){fds[k].setAttribute('cx',x(i));fds[k].setAttribute('cy',y(v));h+=`<div><i style="background:${se.c}"></i>${se.name}: <b>${f(v)}</b></div>`}});
+      if(o.tip)h+=`<div class="sub">${o.tip(i)}</div>`;
+      showTip(h,e)};
+    svg.onmouseleave=()=>{ch.setAttribute('opacity',0);fds.forEach(d=>d.setAttribute('opacity',0));hideTip()};
+    el.querySelectorAll('.tg').forEach(t=>t.onclick=()=>{const i=+t.dataset.i;if(hid.has(i))hid.delete(i);else if(hid.size<series.length-1)hid.add(i);draw()});
+  }
+  draw();
+}
+function bars(id,labels,vals,o={}){
+  const el=$(id),k=id.slice(1)+'g',W=640,H=270,L=58,R=14,T=22,B=46,n=labels.length,hi=Math.max(...vals,1e-9)*1.15,bw=(W-L-R)/n;
+  const x=i=>L+bw*(i+.5),y=v=>T+(H-T-B)*(1-v/hi),mn=Math.min(...vals),mx=Math.max(...vals);
+  const col=i=>o.grad?scale(o.grad,mx>mn?(vals[i]-mn)/(mx-mn):.5):Array.isArray(o.c)?o.c[i]:(o.c||C.a);
+  const u=o.unit||'';
+  let s=`<svg viewBox="0 0 ${W} ${H}"><defs>`+vals.map((v,i)=>`<linearGradient id="${k}${i}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${col(i)}"/><stop offset="1" stop-color="${col(i)}" stop-opacity=".45"/></linearGradient>`).join('')+'</defs>'
+    +frame(W,H,L,R,T,B,0,hi,labels,x,{...o,tick:n<=12?(i=>labels[i]):null});
+  vals.forEach((v,i)=>{
+    s+=`<rect class="bar" data-i="${i}" x="${(x(i)-bw*.31).toFixed(1)}" y="${y(v).toFixed(1)}" width="${(bw*.62).toFixed(1)}" height="${Math.max(0,H-B-y(v)).toFixed(1)}" rx="3" fill="url(#${k}${i})"/>`;
+    if(n<=12)s+=`<text class="t" x="${x(i)}" y="${y(v)-5}" text-anchor="middle" style="fill:#e8edf6">${fmt(v)}</text>`});
+  vals.forEach((v,i)=>s+=`<rect class="hit" data-i="${i}" x="${L+bw*i}" y="${T}" width="${bw}" height="${H-T-B}" fill="transparent"/>`);
+  let h2='';
+  if(o.grad)h2=`<div class="cb" style="background:linear-gradient(90deg,${o.grad.join(',')})"></div><div class="cbl"><span>Lowest: ${fmt(mn,2)}${u}</span><span>Highest: ${fmt(mx,2)}${u}</span></div>`;
+  el.innerHTML=s+'</svg>'+h2;
+  const bs=el.querySelectorAll('.bar');
+  el.querySelectorAll('.hit').forEach(r=>{const i=+r.dataset.i;
+    r.onmousemove=e=>{bs[i].classList.add('hv');showTip(`<b>${(o.full||labels)[i]}</b><div><i style="background:${col(i)}"></i>${o.name||'Value'}: <b>${fmt(vals[i],2)}${u}</b></div>`+(o.tip?`<div class="sub">${o.tip(i)}</div>`:''),e)};
+    r.onmouseleave=()=>{bs[i].classList.remove('hv');hideTip()}});
+}
+function scatter(rows){
+  const cv=$('#c7'),g=cv.getContext('2d'),W=cv.width,H=cv.height,PL=46,PB=38,PT=8,PR=8;
+  const col={Built:C.a,Bare:C.c,Water:C.d,Crops:C.b,Grass:C.e},off=new Set();let hov=null;
+  const xs=rows.map(r=>r.Longitude),ys=rows.map(r=>r.Latitude);
+  const x0=Math.min(...xs),x1=Math.max(...xs),y0=Math.min(...ys),y1=Math.max(...ys);
+  const pts=rows.map(r=>({r,x:PL+(r.Longitude-x0)/(x1-x0)*(W-PL-PR),y:PT+(1-(r.Latitude-y0)/(y1-y0))*(H-PT-PB)}));
+  function draw(){
+    g.clearRect(0,0,W,H);g.strokeStyle='#3b4b6b';g.strokeRect(PL,PT,W-PL-PR,H-PT-PB);
+    g.fillStyle='#9db0cf';g.font='11px Segoe UI,sans-serif';g.textAlign='left';g.fillText(x0.toFixed(2),PL,H-PB+14);
+    g.textAlign='right';g.fillText(x1.toFixed(2),W-PR,H-PB+14);g.fillText(y1.toFixed(2),PL-4,PT+10);g.fillText(y0.toFixed(2),PL-4,H-PB);
+    g.fillStyle='#c3d0e6';g.font='12px Segoe UI,sans-serif';g.textAlign='center';g.fillText('Longitude (°E)',(PL+W-PR)/2,H-6);
+    g.save();g.translate(12,(PT+H-PB)/2);g.rotate(-Math.PI/2);g.fillText('Latitude (°N)',0,0);g.restore();
+    g.globalAlpha=.65;
+    pts.forEach(p=>{if(off.has(p.r.Land_Class))return;g.fillStyle=col[p.r.Land_Class]||'#999';g.beginPath();g.arc(p.x,p.y,2.4,0,7);g.fill()});
+    g.globalAlpha=1;
+    if(hov){g.strokeStyle='#fff';g.lineWidth=2;g.fillStyle=col[hov.r.Land_Class];g.beginPath();g.arc(hov.x,hov.y,6,0,7);g.fill();g.stroke();g.lineWidth=1}
+  }
+  cv.onmousemove=e=>{
+    const b=cv.getBoundingClientRect(),sx=W/b.width,mx=(e.clientX-b.left)*sx,my=(e.clientY-b.top)*sx;
+    let best=null,bd=100;
+    pts.forEach(p=>{if(off.has(p.r.Land_Class))return;const d=(p.x-mx)**2+(p.y-my)**2;if(d<bd){bd=d;best=p}});
+    if(best!==hov){hov=best;draw()}
+    if(best){const r=best.r;showTip(`<b>Sample #${r.Sample_ID} · ${r.Land_Class}</b><div>Year: <b>${r.Year}</b></div><div>Location: <b>${r.Latitude.toFixed(4)}°N, ${r.Longitude.toFixed(4)}°E</b></div><div>Chance it is built-up: <b>${r.Built_Probability.toFixed(2)}</b></div><div>NDVI: <b>${r.NDVI.toFixed(2)}</b> · NDBI: <b>${r.NDBI.toFixed(2)}</b></div>`,e)}else hideTip()};
+  cv.onmouseleave=()=>{hov=null;draw();hideTip()};
+  const lg=$('#l7');
+  lg.innerHTML=Object.entries(col).map(([k,c])=>`<span class="tg" data-k="${k}"><i style="background:${c}"></i>${k}</span>`).join('');
+  lg.querySelectorAll('.tg').forEach(t=>t.onclick=()=>{const k=t.dataset.k;off.has(k)?off.delete(k):off.add(k);t.classList.toggle('off');draw()});
+  draw();
+}
+const kpi=(id,items)=>{const el=$(id);el.innerHTML=items.map((k,i)=>`<div class="kpi" data-i="${i}"><small>${k[0]}</small><b>${k[1].replace(/ (km²(?:\/yr)?)$/,'<em> $1</em>')}</b><span>${k[2]||''}</span></div>`).join('');
+  el.querySelectorAll('.kpi').forEach(c=>{const t=items[+c.dataset.i][3];c.onmousemove=e=>t&&showTip(t,e);c.onmouseleave=hideTip})};
+
+/* ---------- Dashboards ---------- */
+function build(D){
+  const A=D.ann,M=D.mon,CV=D.conv,CL=D.cls,SU=D.sus;
+
+  // Dashboard 1
+  const first=A[0],last=A[A.length-1],net=last.Confident_Built_km2-first.Confident_Built_km2;
+  kpi('#k1',[
+    [`Built-up area in ${last.Year}`,fmt(last.Confident_Built_km2)+' km²',`${(last.Built_Share_Ratio*100).toFixed(1)}% of the study region`,'How much of the region is covered by buildings and other built surfaces in the latest year.'],
+    [`Area added since ${first.Year}`,'+'+fmt(net)+' km²',`${first.Year} → ${last.Year}`,'Built-up area in the latest year minus built-up area in the first year.'],
+    [`Growth since ${first.Year}`,'+'+(net/first.Confident_Built_km2*100).toFixed(0)+'%','compared with the starting year','How much bigger the built-up area is now, as a percentage of the starting year.'],
+    ['Average added per year','+'+fmt(net/(A.length-1))+' km²','each year on average','Net expansion divided by the number of years between the first and last year.']
+  ]);
+  const yrs=A.map(r=>r.Year),ml=M.map(r=>r.YearMonth),km=v=>fmt(v,2)+' km²';
+  line('#c1',yrs,[{name:'Strict estimate (high confidence)',c:C.a,v:A.map(r=>r.Confident_Built_km2),dots:1},{name:'Most-likely estimate',c:C.b,v:A.map(r=>r.Modal_Built_km2),dots:1}],{x:'Year',y:'Built-up area (km²)',f:km,tip:i=>`${A[i].Satellite_Images} satellite images used · ${(A[i].Built_Share_Ratio*100).toFixed(1)}% of region`});
+  bars('#c2',yrs.slice(1),A.slice(1).map(r=>r.YoY_Change_km2),{grad:['#5eead4','#f2b84b','#ff7a6b'],x:'Year',y:'Area added (km²)',unit:' km²',name:'Added vs. previous year',tip:i=>`${(A[i+1].YoY_Growth_Ratio*100).toFixed(1)}% growth over ${yrs[i]}`});
+  line('#c3',ml,[{name:'Monthly value',c:C.d,v:M.map(r=>r.Confident_Built_km2)},{name:'Smoothed trend (12-month average)',c:C.a,v:M.map(r=>r.MA12_Built_km2)}],{x:'Year',y:'Built-up area (km²)',f:km,tick:i=>i%12===0?M[i].Year:'',hl:i=>M[i].Month_Name+' '+M[i].Year,tip:i=>`Coverage ${(M[i].Coverage_Ratio*100).toFixed(0)}% · Quality check: ${M[i].QC_Status}`});
+
+  // Dashboard 2
+  const tot=sum(CV.map(r=>r.Persistent_Conversion_km2)),bare=sum(CV.filter(r=>r.Source_Class==='bare').map(r=>r.Persistent_Conversion_km2));
+  const conv=SU.filter(r=>r.Converted===1),test=conv.filter(r=>r.Split!=='training').length;
+  kpi('#k2',[
+    ['Land turned into built-up',fmt(tot)+' km²','confirmed over several years','Area that changed to built-up and stayed built-up in later years, summed over all periods.'],
+    ['Share that was bare land',(bare/tot*100).toFixed(2)+'%','of all newly built area','Most new construction happens on bare land rather than on farmland, water or vegetation.'],
+    ['Built-up sample points',CL.filter(r=>r.Land_Class==='Built').length.toLocaleString(),`out of ${CL.length.toLocaleString()} sample points`,'Ground-truth points labelled as built-up, used to check the satellite classification.'],
+    ['Sample points that became built-up',conv.length.toLocaleString(),`out of ${SU.length.toLocaleString()} · ${test} kept for testing`,'Points whose land changed to built-up, used to study which land is likely to be built on next.']
+  ]);
+  const per=[...new Set(CV.map(r=>r.Period))],km2=' km²';
+  const pv=per.map(p=>sum(CV.filter(r=>r.Period===p).map(r=>r.Persistent_Conversion_km2))),pb=per.map(p=>sum(CV.filter(r=>r.Period===p&&r.Source_Class==='bare').map(r=>r.Persistent_Conversion_km2)));
+  bars('#c4',per,pv,{c:C.b,x:'Period',y:'Converted area (km²)',unit:km2,name:'Turned into built-up',tip:i=>`${pv[i]>0?(pb[i]/pv[i]*100).toFixed(1):0}% from bare land`});
+  const rawSrc=[...new Set(CV.map(r=>r.Source_Class))].map(s=>[s,sum(CV.filter(r=>r.Source_Class===s).map(r=>r.Persistent_Conversion_km2))]).sort((a,b)=>b[1]-a[1]);
+  bars('#c5',rawSrc.map(s=>SHORT[s[0]]||pretty(s[0])),rawSrc.map(s=>s[1]),{c:C.c,full:rawSrc.map(s=>pretty(s[0])),x:'Land type before conversion',y:'Converted area (km²)',unit:km2,name:'Turned into built-up',tip:i=>`${(rawSrc[i][1]/tot*100).toFixed(2)}% of all converted area`});
+  const cls=['Built','Bare','Crops','Water','Grass'],cn=cls.map(k=>CL.filter(r=>r.Land_Class===k).length);
+  bars('#c6',cls,cn,{c:[C.a,C.c,C.b,C.d,C.e],x:'Land type',y:'Number of samples',name:'Samples',tip:i=>`${(cn[i]/CL.length*100).toFixed(1)}% of all samples`});
+  scatter(CL);
+
+  // Dashboard 3
+  const yv=A.map(r=>r.Confident_Built_km2),ys=med(slopes(yv,yrs)),ma=mkParts(yv),pA=mkP(ma.S,ma.V);
+  const byM=[...Array(12)].map((_,m)=>M.filter(r=>r.Month_Number===m+1));
+  let S=0,V=0,sl=[];
+  byM.forEach(g=>{const v=g.map(r=>r.Confident_Built_km2),p=mkParts(v);S+=p.S;V+=p.V;sl.push(...slopes(v,g.map(r=>r.Year)))});
+  const pM=mkP(S,V),pass=M.filter(r=>r.QC_Status==='Pass').length;
+  kpi('#k3',[
+    ['Typical yearly growth','+'+fmt(ys,2)+' km²/yr','a steady rate of increase',"Sen's slope: the median of all year-to-year slopes, so one unusual year can't distort it."],
+    ['Is the yearly trend real?',pA<0.05?'Yes':'Not clear','p '+pTxt(pA)+' · 95% confidence','Mann-Kendall test on the yearly values. A p-value below 0.05 means the upward trend is very unlikely to be chance.'],
+    ['Growth with seasons removed','+'+fmt(med(sl),2)+' km²/yr','same month compared across years',"Seasonal Sen's slope: each month is only compared with the same month in other years, so seasonal swings don't mix in."],
+    ['Is the monthly trend real?',pM<0.05?'Yes':'Not clear','p '+pTxt(pM)+' · 95% confidence','Seasonal Mann-Kendall test on the monthly values.'],
+    ['Average satellite coverage',(mean(M.map(r=>r.Coverage_Ratio))*100).toFixed(1)+'%',`of the region seen each month`,'Share of the study region with a valid satellite observation, averaged over all months.'],
+    ['Months passing quality check',(pass/M.length*100).toFixed(1)+'%',`${M.length-pass} of ${M.length} months flagged for review`,'Months where observation coverage and quality met the quality-control rules.']
+  ]);
+  line('#c8',ml,[{name:'Satellite coverage',c:C.b,v:M.map(r=>r.Coverage_Ratio),hot:i=>M[i].QC_Status!=='Pass'}],{max:1.02,x:'Year',y:'Region covered by satellites',tf:v=>Math.round(v*100)+'%',f:v=>(v*100).toFixed(1)+'%',tick:i=>i%12===0?M[i].Year:'',hl:i=>M[i].Month_Name+' '+M[i].Year,tip:i=>`Quality check: ${M[i].QC_Status} · ${M[i].Satellite_Images} images`,extra:`<span><i style="background:${C.c}"></i>Month flagged for quality review</span>`});
+  line('#c9',M.slice(0,12).map(r=>r.Month_Name.slice(0,3)),[{name:'Average built-up area',c:C.e,v:byM.map(g=>mean(g.map(r=>r.Confident_Built_km2))),dots:1}],{x:'Calendar month',y:'Built-up area (km²)',f:v=>fmt(v,2)+' km²',hl:i=>M[i].Month_Name+' (average of '+byM[i].length+' years)'});
+  bars('#c10',yrs,A.map(r=>r.Satellite_Images),{c:C.d,x:'Year',y:'Satellite images',name:'Images',tip:i=>`${fmt(A[i].Valid_Observation_km2,0)} km² valid observation area`});
+  banner(A);detective(A,M);
+}
+
+/* ---------- Trend Detective ---------- */
+function trend(rows,key,monthly,y0,y1){
+  const R=rows.filter(r=>r.Year>=y0&&r.Year<=y1&&r[key]!=null);
+  const gs=monthly?[...Array(12)].map((_,m)=>R.filter(r=>r.Month_Number===m+1)):[R];
+  let S=0,V=0,D=0,sl=[];
+  gs.forEach(g=>{if(g.length<2)return;const v=g.map(r=>r[key]),p=mkParts(v);S+=p.S;V+=p.V;D+=g.length*(g.length-1)/2;sl.push(...slopes(v,g.map(r=>r.Year)))});
+  sl.sort((a,b)=>a-b);
+  const N=sl.length,slope=med(sl),Cc=1.96*Math.sqrt(V);
+  const lo=sl[Math.max(0,Math.floor((N-Cc)/2))],hi=sl[Math.min(N-1,Math.ceil((N+Cc)/2)-1)];
+  const xd=r=>r.Year+(monthly?(r.Month_Number-1)/12:0),ic=med(R.map(r=>r[key]-slope*xd(r)));
+  return {R,slope,lo,hi,p:mkP(S,V),tau:S/D,n:R.length,xd,ic};
+}
+function banner(A){
+  const y0=A[0].Year,y1=A[A.length-1].Year,t=trend(A,'Confident_Built_km2',false,y0,y1),up=t.slope>0,sg=t.p<0.05;
+  $('#bn').innerHTML=`<div class="bq"><small>What is changing?</small><b>Built-up area</b><span>buildings and other built surfaces</span></div>
+  <div class="bq"><small>Where?</small><b>Study region</b><span>${fmt(A[0].Valid_Observation_km2,0)} km² observed</span></div>
+  <div class="bq"><small>How much?</small><b>${up?'+':''}${fmt(t.slope,2)} <em>km²/yr</em></b><span>95% range: ${fmt(t.lo,1)} to ${fmt(t.hi,1)}</span></div>
+  <div class="bq"><small>Is it significant?</small><b>${sg?'Yes':'Not yet'}</b><span>p ${pTxt(t.p)}</span></div>
+  <p class="bs">Between ${y0} and ${y1}, built-up area ${up?'grew':'shrank'} by about ${fmt(Math.abs(t.slope),1)} km² per year. ${sg?'That is very unlikely to be chance.':'That could still be chance.'}</p>`;
+}
+function detective(A,M){
+  const $v=$('#tv'),$r=$('#tr'),$s=$('#ts'),$e=$('#te');
+  const VARS=[['Confident_Built_km2','Strict estimate (high confidence)'],['Modal_Built_km2','Most-likely estimate'],['Built_Probability_km2','Probability-weighted estimate']];
+  const mo=()=>$r.value==='m',rows=()=>mo()?M:A,yrs=()=>[...new Set(rows().map(r=>r.Year))];
+  function fillVars(){const cur=$v.value,l=VARS.filter(v=>!mo()||v[0]!=='Modal_Built_km2');$v.innerHTML=l.map(v=>`<option value="${v[0]}">${v[1]}</option>`).join('');if(l.some(v=>v[0]===cur))$v.value=cur}
+  function fillYears(a,b){const y=yrs(),o=y.map(v=>`<option>${v}</option>`).join('');$s.innerHTML=o;$e.innerHTML=o;$s.value=y.includes(a)?a:y[0];$e.value=y.includes(b)?b:y[y.length-1]}
+  function run(){
+    const y0=+$s.value,y1=+$e.value,key=$v.value,m=mo();
+    if(y1-y0<3){$('#tdc').innerHTML='';$('#tdr').innerHTML='<div class="verdict">Choose a period of at least 4 years</div><p>A trend test needs enough points to tell a pattern from noise.</p>';return}
+    const t=trend(rows(),key,m,y0,y1),up=t.slope>0,sg=t.p<0.05,name=VARS.find(v=>v[0]===key)[1],span=y1-y0+(m?11/12:0);
+    line('#tdc',t.R.map(r=>m?r.Month_Name.slice(0,3)+' '+r.Year:r.Year),[{name,c:C.a,v:t.R.map(r=>r[key]),dots:!m},{name:'Trend line',c:C.b,dash:1,v:t.R.map(r=>t.ic+t.slope*t.xd(r))}],{x:'Year',y:'Built-up area (km²)',f:v=>fmt(v,2)+' km²',tick:i=>m?(t.R[i].Month_Number===1?t.R[i].Year:''):t.R[i].Year});
+    const row=(a,b)=>`<div><span>${a}</span><b>${b}</b></div>`;
+    $('#tdr').innerHTML=`<div class="verdict" style="color:${sg?C.b:C.a}">${sg?`Yes: a real ${up?'increase':'decrease'}`:'No clear trend yet'}</div>
+    <p>${sg?`From ${y0} to ${y1}, built-up area ${up?'rose':'fell'} by about <b>${fmt(Math.abs(t.slope),2)} km² per year</b>. This is very unlikely to be chance.`:`The data shows a change of about ${fmt(t.slope,2)} km² per year, but it could be chance. A longer period may make it significant.`}</p>
+    <div class="rows">${row('Rate of change',(up?'+':'')+fmt(t.slope,2)+' km²/yr')}${row('95% confidence range',fmt(t.lo,2)+' to '+fmt(t.hi,2))}${row('Total change over the period','≈ '+(up?'+':'')+fmt(t.slope*span,1)+' km²')}${row('p-value',pTxt(t.p))}${row("Trend strength (Kendall's τ)",t.tau.toFixed(2))}${row('Data points used',t.n)}</div>
+    <p class="note">Method: Mann-Kendall test with Sen's slope${m?', comparing each month only with the same month in other years (seasons removed)':''}. ${m?'Monthly values are not fully independent, so treat the p-value as optimistic. ':''}${t.n<8?'Few data points make a trend harder to confirm.':''}</p>`;
+  }
+  $r.onchange=()=>{fillVars();fillYears();run()};
+  [$v,$s,$e].forEach(x=>x.onchange=run);
+  document.querySelectorAll('.chip').forEach(b=>b.onclick=()=>{const p=b.dataset.p;$r.value=p==='m'?'m':'a';fillVars();p==='short'?fillYears(2017,2020):fillYears();run()});
+  fillVars();fillYears();run();
+}
+
+/* ---------- Load ---------- */
+async function init(){
+  const D={};
+  try{
+    for(const [k,f] of Object.entries(FILES)){
+      const r=await fetch(f);if(!r.ok)throw new Error(f);D[k]=parse(await r.text());
+    }
+    build(D);
+  }catch(e){
+    $('#msg').innerHTML=`<div><b>Couldn't load the CSV files automatically.</b><br>Browsers block <code>fetch()</code> when a page is opened straight from disk (file://). Either run <code>python -m http.server</code> in this folder and open <code>http://localhost:8000/dashboard.html</code>, or pick all five CSV files here:<br><br><input type="file" id="fp" multiple accept=".csv"></div>`;
+    $('#fp').onchange=async ev=>{
+      const d={};
+      for(const f of ev.target.files){const k=Object.keys(FILES).find(k=>f.name.endsWith(FILES[k]));if(k)d[k]=parse(await f.text())}
+      if(Object.keys(FILES).every(k=>d[k])){$('#msg').innerHTML='';build(d)}else alert('Please select all five CSV files.');
+    };
+  }
+}
+$('#tabs').onclick=e=>{const t=e.target.dataset.t;if(!t)return;
+  document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b===e.target));
+  document.querySelectorAll('section').forEach(s=>s.classList.toggle('on',s.id===t))};
+init();
+</script>
+</body>
+</html>

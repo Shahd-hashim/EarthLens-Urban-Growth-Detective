@@ -1,0 +1,25 @@
+EARTHLENS — STEP 7 SUMMARY
+=========================
+Urban Growth rows used: 56 persistent conversion summaries
+Complete Dataset rows: 7,077
+2025 classification samples: 1,190
+2023→2025 conversion samples: 600
+  Converted=1: 300 samples
+  Converted=0: 300 samples
+
+Sums across the available 2-year windows (NOT unique area):
+  Bare → Built:  24.844655 km² (99.9844%)
+  Crops → Built: 0.003882 km² (0.0156%)
+  Total across source classes/periods: 24.848537 km²
+
+INTERPRETATION LIMITS
+1. The 2-year windows overlap. Never interpret their summed areas as unique
+   land converted in one non-overlapping period or equate to annual net growth.
+2. Sample points were selected for tasks, so their count cannot estimate
+   regional land-cover percentages, conversion prevalence, or hotspots.
+3. A point scatter plot is NOT a continuous satellite change map. A valid
+   pixel-level area/change map would require raster imagery and an ROI polygon.
+4. 'Bare' is a satellite class, not proof of ground ownership, vacant lots,
+   ecological quality, or exact construction location.
+5. 'Converted=1' denotes the provided task label; this script does not
+   independently validate conversion against satellite ground truth.
